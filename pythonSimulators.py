@@ -34,21 +34,39 @@ class GymResetSampler(StateSampler):
         #gymEnv -- gym environment
         #be careful to create separate copy of it
         self.gymEnv = gymEnv
-        
+        self.stateSpaceType = 'Continuous'
+        self.stateSpaceShape = gymEnv.reset().shape
+        if(len(self.stateSpaceShape)==0):
+            self.stateSpaceShape = (1,)
+            self.stateSpaceN = self.gymEnv.observation_space.n
+            self.stateSpaceType='Discrete'
+
+
     def sample(self,Nsamples=1):
-        return np.concatenate([self.gymEnv.reset()[None,:] for k in np.arange(Nsamples)], axis=0)
+        print("StateSampler.sample.DEBUG","reset:",self.gymEnv.reset())
+        if(self.stateSpaceType=='Discrete'):
+            return np.concatenate([np.array([self.gymEnv.reset()])[None,:] for k in np.arange(Nsamples)], axis=0)
+        else:
+            return np.concatenate([self.gymEnv.reset()[None,:] for k in np.arange(Nsamples)], axis=0)
 
 
 
 class GymSimulator:
 
     #UNDER CONSTRUCTION!!!
-
+    #supports only Box and Discrete action and state spaces!
     def __init__(self,gymInst):
         #gymInstance -- gym environment
         #the rest are its parameters
         self.gymInstance = gymInst
+
+        self.stateSpaceType = 'Continuous'
         self.stateSpaceShape = gymInst.reset().shape
+        if(len(self.stateSpaceShape)==0):
+            self.stateSpaceShape = (1,)
+            self.stateSpaceN = self.gymInstance.observation_space.n
+            self.stateSpaceType='Discrete'
+
         self.actionSpace = gymInst.action_space
         self.actionSpaceShape = self.actionSpace.shape
         self.actionSpaceType='Continuous'
